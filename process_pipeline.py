@@ -1,7 +1,11 @@
 def process_pipeline(image):
     imshape = image.shape
 
-    gray = grayscale(image)
+    hsv = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    yellow = cv2.inRange(hsv, (20, 50, 50), (50, 255, 255))
+    white = cv2.inRange(hsv, (0, 0, 180), (255, 25, 255))
+
+    gray = cv2.bitwise_or(yellow, white)
 
     KERNEL_SIZE  = 7  # Kernel size for Gaussian blur
     blurred_gray = gaussian_blur(gray, KERNEL_SIZE)
