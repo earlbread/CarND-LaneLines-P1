@@ -13,8 +13,8 @@ def process_pipeline(image):
 
     # Region to mask
     X_LEFT_BOTTOM  = int((imshape[1] / 20) * 2)
-    X_LEFT_TOP     = int((imshape[1] / 10) * 4)
-    X_RIGHT_TOP    = int((imshape[1] / 10) * 7)
+    X_LEFT_TOP     = int((imshape[1] / 20) * 8)
+    X_RIGHT_TOP    = int((imshape[1] / 20) * 13)
     X_RIGHT_BOTTOM = int((imshape[1] / 20) * 19)
 
     Y_TOP          = int((imshape[0] / 3) * 2)
@@ -32,7 +32,7 @@ def process_pipeline(image):
     THETA        = np.pi / 180
     THRESHOLD    = 40
     MIN_LINE_LEN = 5
-    MAX_LINE_GAP = 100
+    MAX_LINE_GAP = 30
 
     hough_image = hough_lines(selected_image, RHO, THETA, THRESHOLD, MIN_LINE_LEN, MAX_LINE_GAP)
     result = weighted_img(hough_image, image)
@@ -40,3 +40,12 @@ def process_pipeline(image):
     cv2.polylines(result, vertices, True, [0, 255, 0], thickness=2, lineType=8, shift=0)
 
     return result
+
+images_dir = "test_images/"
+for filename in os.listdir(images_dir):
+    filepath = images_dir + filename
+    image = mpimg.imread(filepath)
+    result = process_pipeline(image)
+
+    plt.imshow(result, cmap='gray')
+    plt.show()
