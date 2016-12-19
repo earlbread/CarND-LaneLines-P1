@@ -40,12 +40,3 @@ def process_pipeline(image):
     cv2.polylines(result, vertices, True, [0, 255, 0], thickness=2, lineType=8, shift=0)
 
     return result
-
-images_dir = "test_images/"
-for filename in os.listdir(images_dir):
-    filepath = images_dir + filename
-    image = mpimg.imread(filepath)
-    result = process_pipeline(image)
-
-    plt.imshow(result, cmap='gray')
-    plt.show()
