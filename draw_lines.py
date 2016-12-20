@@ -1,3 +1,6 @@
+def get_average_line(lines):
+    return [list(map(int, np.average(lines, axis=0)[0]))]
+
 def get_xvalue(line, y_min, y_max):
     for x1, y1, x2, y2 in line:
         slope = (y2 - y1) / (x2 - x1)
@@ -8,8 +11,30 @@ def get_xvalue(line, y_min, y_max):
 
     return x_min, x_max
 
-def get_average_line(lines):
-    return [list(map(int, np.average(lines, axis=0)[0]))]
+def get_xvalue_from_lines(lines, y_min, y_max):
+    average_line = get_average_line(lines)
+    return get_xvalue(average_line, y_min, y_max)
+
+prev_left = []
+prev_right = []
+
+def clear_prev_lines():
+    prev_left.clear()
+    prev_right.clear()
+
+def first_order_filter(prev_line, next_line):
+    ALPHA  = 0.2
+    for i in range(len(next_line)):
+        next_line[i] = int(prev_line[i] * (1 - ALPHA) + next_line[i] * ALPHA)
+
+def draw_solid_line(img, line_value):
+    SOLIDLINE_COLOR = [0, 255, 0]
+    SOLIDLINE_THICKNESS = 12
+
+    x1, y1, x2, y2 = line_value
+
+    cv2.line(img, (x1, y1), (x2, y2), SOLIDLINE_COLOR, SOLIDLINE_THICKNESS)
+
 
 def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
     """
@@ -63,16 +88,35 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
 
             cv2.line(img, (x1, y1), (x2, y2), color, thickness)
 
-    SOLIDLINE_COLOR = [0, 255, 0]
-    SOLIDLINE_THICKNESS = 12
+    global prev_left
+    global prev_right
+
+    next_left = []
+    next_right = []
 
     if left_lines:
-        left_average_line = get_average_line(left_lines)
-        x_min, x_max = get_xvalue(left_average_line, y_min, y_max)
+        x_min, x_max = get_xvalue_from_lines(left_lines, y_min, y_max)
+        next_left = [x_min, y_min, x_max, y_max]
 
-        cv2.line(img, (x_min, y_min), (x_max, y_max), SOLIDLINE_COLOR, SOLIDLINE_THICKNESS)
+        if prev_left:
+            first_order_filter(prev_left, next_left)
+        prev_left = next_left
+
+    if next_left:
+        draw_solid_line(img, next_left)
+    elif prev_left:
+        draw_solid_line(img, prev_left)
+
+
     if right_lines:
-        right_average_line = get_average_line(right_lines)
-        x_min, x_max = get_xvalue(right_average_line, y_min, y_max)
+        x_min, x_max = get_xvalue_from_lines(right_lines, y_min, y_max)
+        next_right = [x_min, y_min, x_max, y_max]
 
-        cv2.line(img, (x_min, y_min), (x_max, y_max), SOLIDLINE_COLOR, SOLIDLINE_THICKNESS)
+        if prev_right:
+            first_order_filter(prev_right, next_right)
+        prev_right = next_right
+
+    if next_right:
+        draw_solid_line(img, next_right)
+    elif prev_left:
+        draw_solid_line(img, prev_right)
