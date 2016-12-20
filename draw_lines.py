@@ -27,13 +27,30 @@ def first_order_filter(prev_line, next_line):
     for i in range(len(next_line)):
         next_line[i] = int(prev_line[i] * (1 - ALPHA) + next_line[i] * ALPHA)
 
-def draw_solid_line(img, line_value):
+def draw_solid_line(img, lines, prev_line, y_min, y_max):
     SOLIDLINE_COLOR = [0, 255, 0]
     SOLIDLINE_THICKNESS = 12
 
-    x1, y1, x2, y2 = line_value
+    next_line = []
+    solid_line = []
+    if lines:
+        x_min, x_max = get_xvalue_from_lines(lines, y_min, y_max)
+        next_line = [x_min, y_min, x_max, y_max]
 
-    cv2.line(img, (x1, y1), (x2, y2), SOLIDLINE_COLOR, SOLIDLINE_THICKNESS)
+        if prev_line:
+            first_order_filter(prev_line, next_line)
+        prev_line = next_line
+
+    if next_line:
+        solid_line = next_line
+    elif prev_line:
+        solid_line = prev_line
+
+    if solid_line:
+        x1, y1, x2, y2 = solid_line
+        cv2.line(img, (x1, y1), (x2, y2), SOLIDLINE_COLOR, SOLIDLINE_THICKNESS)
+
+    return solid_line
 
 
 def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
@@ -86,37 +103,9 @@ def draw_lines(img, lines, color=[255, 0, 0], thickness=2):
                 if x1 > x_half and x2 > x_half:
                     right_lines.append(line)
 
-            cv2.line(img, (x1, y1), (x2, y2), color, thickness)
-
     global prev_left
     global prev_right
 
-    next_left = []
-    next_right = []
+    prev_left = draw_solid_line(img, left_lines, prev_left, y_min, y_max)
+    prev_right = draw_solid_line(img, right_lines, prev_right, y_min, y_max)
 
-    if left_lines:
-        x_min, x_max = get_xvalue_from_lines(left_lines, y_min, y_max)
-        next_left = [x_min, y_min, x_max, y_max]
-
-        if prev_left:
-            first_order_filter(prev_left, next_left)
-        prev_left = next_left
-
-    if next_left:
-        draw_solid_line(img, next_left)
-    elif prev_left:
-        draw_solid_line(img, prev_left)
-
-
-    if right_lines:
-        x_min, x_max = get_xvalue_from_lines(right_lines, y_min, y_max)
-        next_right = [x_min, y_min, x_max, y_max]
-
-        if prev_right:
-            first_order_filter(prev_right, next_right)
-        prev_right = next_right
-
-    if next_right:
-        draw_solid_line(img, next_right)
-    elif prev_left:
-        draw_solid_line(img, prev_right)
